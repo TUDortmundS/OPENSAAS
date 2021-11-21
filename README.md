@@ -75,4 +75,51 @@ For Koa 1, use [koa-convert](https://github.com/koajs/convert) to convert the mi
 const koa = require('koa');
 const mount = require('koa-mount'); // koa-mount@1.x
 const convert = require('koa-convert');
-const { graphqlHTTP } = require('koa-graphql')
+const { graphqlHTTP } = require('koa-graphql');
+
+const app = koa();
+
+app.use(
+  mount(
+    '/graphql',
+    convert.back(
+      graphqlHTTP({
+        schema: MyGraphQLSchema,
+        graphiql: true,
+      }),
+    ),
+  ),
+);
+```
+
+## Setup with Subscription Support
+
+```js
+const Koa = require('koa');
+const mount = require('koa-mount');
+const { graphqlHTTP } = require('koa-graphql');
+const typeDefs = require('./schema');
+const resolvers = require('./resolvers');
+const { makeExecutableSchema } = require('graphql-tools');
+const schema = makeExecutableSchema({
+  typeDefs: typeDefs,
+  resolvers: resolvers,
+});
+const { execute, subscribe } = require('graphql');
+const { createServer } = require('http');
+const { SubscriptionServer } = require('subscriptions-transport-ws');
+const PORT = 4000;
+const app = new Koa();
+app.use(
+  mount(
+    '/graphql',
+    graphqlHTTP({
+      schema: schema,
+      graphiql: {
+        subscriptionEndpoint: `ws://localhost:${PORT}/subscriptions`,
+      },
+    }),
+  ),
+);
+const ws = createServer(app.callback());
+ws.listen(PORT, () =>
