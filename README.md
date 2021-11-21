@@ -122,4 +122,38 @@ app.use(
   ),
 );
 const ws = createServer(app.callback());
-ws.listen(PORT, () =>
+ws.listen(PORT, () => {
+  // Set up the WebSocket for handling GraphQL subscriptions.
+  new SubscriptionServer(
+    {
+      execute,
+      subscribe,
+      schema,
+    },
+    {
+      server: ws,
+      path: '/subscriptions',
+    },
+  );
+});
+```
+
+## Options
+
+The `graphqlHTTP` function accepts the following options:
+
+- **`schema`**: A `GraphQLSchema` instance from [`graphql-js`][].
+  A `schema` _must_ be provided.
+
+- **`graphiql`**: If `true`, presents [GraphiQL][] when the GraphQL endpoint is
+  loaded in a browser. We recommend that you set `graphiql` to `true` when your
+  app is in development, because it's quite useful. You may or may not want it
+  in production.
+  Alternatively, instead of `true` you can pass in an options object:
+
+  - **`defaultQuery`**: An optional GraphQL string to use when no query
+    is provided and no stored query exists from a previous session.
+    If `undefined` is provided, GraphiQL will use its own default query.
+
+  - **`headerEditorEnabled`**: An optional boolean which enables the header editor when true.
+    Defaults to
