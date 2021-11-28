@@ -174,4 +174,23 @@ The `graphqlHTTP` function accepts the following options:
   function from [`graphql-js/src/execute.js`](https://github.com/graphql/graphql-js/blob/main/src/execution/execute.js#L130). If `context` is not provided, the
   `ctx` object is passed as the context.
 
-- **`pretty`**: If `true`, any JSON respons
+- **`pretty`**: If `true`, any JSON response will be pretty-printed.
+
+- **`extensions`**: An optional function for adding additional metadata to the
+  GraphQL response as a key-value object. The result will be added to the
+  `"extensions"` field in the resulting JSON. This is often a useful place to
+  add development time metadata such as the runtime of a query or the amount
+  of resources consumed. This may be an async function. The function is
+  given one object as an argument: `{ document, variables, operationName, result, context }`.
+
+- **`validationRules`**: Optional additional validation rules that queries must
+  satisfy in addition to those defined by the GraphQL spec.
+
+- **`customValidateFn`**: An optional function which will be used to validate
+  instead of default `validate` from `graphql-js`.
+
+- **`customExecuteFn`**: An optional function which will be used to execute
+  instead of default `execute` from `graphql-js`.
+
+- **`customFormatErrorFn`**: An optional function which will be used to format any
+  errors p
