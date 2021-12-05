@@ -193,4 +193,28 @@ The `graphqlHTTP` function accepts the following options:
   instead of default `execute` from `graphql-js`.
 
 - **`customFormatErrorFn`**: An optional function which will be used to format any
-  errors p
+  errors produced by fulfilling a GraphQL operation. If no function is
+  provided, GraphQL's default spec-compliant [`formatError`][] function will be used.
+
+- **`customParseFn`**: An optional function which will be used to create a document
+  instead of the default `parse` from `graphql-js`.
+
+- **`formatError`**: is deprecated and replaced by `customFormatErrorFn`. It will be
+  removed in version 1.0.0.
+
+- **`fieldResolver`**
+
+- **`typeResolver`**
+
+In addition to an object defining each option, options can also be provided as
+a function (or async function) which returns this options object. This function
+is provided the arguments `(request, response, graphQLParams)` and is called
+after the request has been parsed.
+
+The `graphQLParams` is provided as the object `{ query, variables, operationName, raw }`.
+
+```js
+app.use(
+  mount(
+    '/graphql',
+    graphqlHTTP(async (request, response, ctx, graphQLParams) =
