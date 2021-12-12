@@ -274,4 +274,51 @@ depending on the provided _Content-Type_ header.
 
 By default, the koa request is passed as the GraphQL `context`.
 Since most koa middleware operates by adding extra data to the
-request object, this means you can use most koa middleware just by inse
+request object, this means you can use most koa middleware just by inserting it before `graphqlHTTP` is mounted. This covers scenarios such as authenticating the user, handling file uploads, or mounting GraphQL on a dynamic endpoint.
+
+This example uses [`koa-session`][] to provide GraphQL with the currently logged-in session.
+
+```js
+const Koa = require('koa');
+const mount = require('koa-mount');
+const session = require('koa-session');
+const { graphqlHTTP } = require('koa-graphql');
+
+const app = new Koa();
+app.keys = ['some secret'];
+app.use(session(app));
+app.use(function* (next) {
+  this.session.id = 'me';
+  yield next;
+});
+
+app.use(
+  mount(
+    '/graphql',
+    graphqlHTTP({
+      schema: MySessionAwareGraphQLSchema,
+      graphiql: true,
+    }),
+  ),
+);
+```
+
+Then in your type definitions, you can access the ctx via the third "context" argument in your `resolve` function:
+
+```js
+new GraphQLObjectType({
+  name: 'MyType',
+  fields: {
+    myField: {
+      type: GraphQLString,
+      resolve(parentValue, args, ctx) {
+        // use `ctx.session` here
+      },
+    },
+  },
+});
+```
+
+## Providing Extensions
+
+The GraphQL
