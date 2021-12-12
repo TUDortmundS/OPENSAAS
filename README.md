@@ -253,4 +253,25 @@ GraphQL will first look for each parameter in the query string of a URL:
 
 If not found in the query string, it will look in the POST request body.
 
-If a previous middleware has already pa
+If a previous middleware has already parsed the POST body, the `request.body`
+value will be used. Use [`multer`][] or a similar middleware to add support
+for `multipart/form-data` content, which may be useful for GraphQL mutations
+involving uploading files. See an [example using multer](https://github.com/graphql-community/koa-graphql/blob/e1a98f3548203a3c41fedf3d4267846785480d28/src/__tests__/http-test.js#L664-L732).
+
+If the POST body has not yet been parsed, `koa-graphql` will interpret it
+depending on the provided _Content-Type_ header.
+
+- **`application/json`**: the POST body will be parsed as a JSON
+  object of parameters.
+
+- **`application/x-www-form-urlencoded`**: the POST body will be
+  parsed as a url-encoded string of key-value pairs.
+
+- **`application/graphql`**: the POST body will be parsed as GraphQL
+  query string, which provides the `query` parameter.
+
+## Combining with Other koa Middleware
+
+By default, the koa request is passed as the GraphQL `context`.
+Since most koa middleware operates by adding extra data to the
+request object, this means you can use most koa middleware just by inse
