@@ -217,4 +217,40 @@ The `graphQLParams` is provided as the object `{ query, variables, operationName
 app.use(
   mount(
     '/graphql',
-    graphqlHTTP(async (request, response, ctx, graphQLParams) =
+    graphqlHTTP(async (request, response, ctx, graphQLParams) => ({
+      schema: MyGraphQLSchema,
+      rootValue: await someFunctionToGetRootValue(request),
+      graphiql: true,
+    })),
+  ),
+);
+```
+
+## HTTP Usage
+
+Once installed at a path, `koa-graphql` will accept requests with
+the parameters:
+
+- **`query`**: A string GraphQL document to be executed.
+
+- **`variables`**: The runtime values to use for any GraphQL query variables
+  as a JSON object.
+
+- **`operationName`**: If the provided `query` contains multiple named
+  operations, this specifies which operation should be executed. If not
+  provided, a 400 error will be returned if the `query` contains multiple
+  named operations.
+
+- **`raw`**: If the `graphiql` option is enabled and the `raw` parameter is
+  provided, raw JSON will always be returned instead of GraphiQL even when
+  loaded from a browser.
+
+GraphQL will first look for each parameter in the query string of a URL:
+
+```
+/graphql?query=query+getUser($id:ID){user(id:$id){name}}&variables={"id":"4"}
+```
+
+If not found in the query string, it will look in the POST request body.
+
+If a previous middleware has already pa
