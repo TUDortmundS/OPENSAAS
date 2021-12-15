@@ -321,4 +321,42 @@ new GraphQLObjectType({
 
 ## Providing Extensions
 
-The GraphQL
+The GraphQL response allows for adding additional information in a response to
+a GraphQL query via a field in the response called `"extensions"`. This is added
+by providing an `extensions` function when using `graphqlHTTP`. The function
+must return a JSON-serializable Object.
+
+When called, this is provided an argument which you can use to get information
+about the GraphQL request:
+
+`{ document, variables, operationName, result, context }`
+
+This example illustrates adding the amount of time consumed by running the
+provided query, which could perhaps be used by your development tools.
+
+```js
+const { graphqlHTTP } = require('koa-graphql');
+
+const app = new Koa();
+
+const extensions = ({
+  document,
+  variables,
+  operationName,
+  result,
+  context,
+}) => {
+  return {
+    runTime: Date.now() - context.startTime,
+  };
+};
+
+app.use(
+  mount(
+    '/graphql',
+    graphqlHTTP((request) => {
+      return {
+        schema: MyGraphQLSchema,
+        context: { startTime: Date.now() },
+        graphiql: true,
+        extens
