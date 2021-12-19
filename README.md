@@ -389,3 +389,45 @@ import { GraphQLError } from 'graphql';
 
 export function DisallowMetadataQueries(context) {
   return {
+    Field(node) {
+      const fieldName = node.name.value;
+
+      if (fieldName === 'metadata') {
+        context.reportError(
+          new GraphQLError(
+            `Validation: Requesting the field ${fieldName} is not allowed`,
+          ),
+        );
+      }
+    },
+  };
+}
+```
+
+### Disabling Introspection
+
+Disabling introspection does not reflect best practices and does not necessarily make your
+application any more secure. Nevertheless, disabling introspection is possible by utilizing the
+`NoSchemaIntrospectionCustomRule` provided by the [graphql-js](https://github.com/graphql/graphql-js)
+package.
+
+```js
+import { NoSchemaIntrospectionCustomRule } from 'graphql';
+
+app.use(
+  mount(
+    '/graphql',
+    graphqlHTTP((request) => {
+      return {
+        schema: MyGraphQLSchema,
+        validationRules: [NoSchemaIntrospectionCustomRule],
+      };
+    }),
+  ),
+);
+```
+
+## Custom GraphiQL Themes
+
+To use custom GraphiQL theme you should pass to `graphiql` option an object with
+the property `editorTheme`. It could be a string wi
