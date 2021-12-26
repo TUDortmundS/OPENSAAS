@@ -430,4 +430,43 @@ app.use(
 ## Custom GraphiQL Themes
 
 To use custom GraphiQL theme you should pass to `graphiql` option an object with
-the property `editorTheme`. It could be a string wi
+the property `editorTheme`. It could be a string with the name of a theme from `CodeMirror`
+
+```js
+router.all(
+  '/graphql',
+  graphqlHTTP({
+    schema: MyGraphQLSchema,
+    graphiql: {
+      editorTheme: 'blackboard',
+    },
+  }),
+);
+```
+
+[List of available CodeMirror themes](https://codemirror.net/demo/theme.html)
+
+or an object with `url` and `name` properties where `url` should lead to
+your custom theme and `name` would be passed to the `GraphiQL`
+react element on creation as the `editorTheme` property
+
+```js
+router.all(
+  '/graphql',
+  graphqlHTTP({
+    schema: MyGraphQLSchema,
+    graphiql: {
+      editorTheme: {
+        name: 'blackboard',
+        url: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.53.2/theme/erlang-dark.css',
+      },
+    },
+  }),
+);
+```
+
+For details see the [GraphiQL spec](https://github.com/graphql/graphiql/tree/master/packages/graphiql#applying-an-editor-theme)
+
+## Additional Validation Rules
+
+GraphQL's [validation phase](https://graphql.github.io/graphql-spec/#sec-Validation) checks the query to ensure that it can be successfully ex
