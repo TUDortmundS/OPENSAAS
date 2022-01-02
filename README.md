@@ -493,4 +493,38 @@ export function DisallowMetadataQueries(context) {
 }
 ```
 
-## Debugging T
+## Debugging Tips
+
+During development, it's useful to get more information from errors, such as
+stack traces. Providing a function to `customFormatErrorFn` enables this:
+
+```js
+customFormatErrorFn: (error, ctx) => ({
+  message: error.message,
+  locations: error.locations,
+  stack: error.stack ? error.stack.split('\n') : [],
+  path: error.path,
+});
+```
+
+### Examples
+
+- [tests](https://github.com/graphql-community/koa-graphql/blob/main/src/__tests__/http-test.js)
+
+### Other Relevant Projects
+
+Please checkout [awesome-graphql](https://github.com/chentsulin/awesome-graphql).
+
+### Contributing
+
+Welcome pull requests!
+
+### License
+
+MIT
+
+[`graphql-js`]: https://github.com/graphql/graphql-js
+[`formaterror`]: https://github.com/graphql/graphql-js/blob/main/src/error/formatError.js
+[graphiql]: https://github.com/graphql/graphiql
+[`multer`]: https://github.com/expressjs/multer
+[`koa-session`]: https://github.com/koajs/session
