@@ -6,4 +6,9 @@ parsers:
   javascript:
     enable_partials: yes
 
-comm
+comment: no
+coverage:
+  status:
+    project:
+      default:
+        target: auto
