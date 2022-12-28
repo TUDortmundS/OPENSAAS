@@ -235,3 +235,88 @@ async function batchCommitInfo(commits) {
 async function batchPRInfo(prs) {
   let prsSubQuery = '';
   for (const number of prs) {
+    prsSubQuery += `
+        pr_${number}: pullRequest(number: ${number}) {
+          number
+          title
+          url
+          author {
+            login
+            url
+            ... on User {
+              name
+            }
+          }
+          labels(first: 10) {
+            nodes {
+              name
+            }
+          }
+        }
+    `;
+  }
+
+  const response = await graphqlRequest(`
+    {
+      repository(owner: "${githubOrg}", name: "${githubRepo}") {
+        ${prsSubQuery}
+      }
+    }
+  `);
+
+  const prsInfo = [];
+  for (const number of prs) {
+    prsInfo.push(response.repository['pr_' + number]);
+  }
+  return prsInfo;
+}
+
+function commitsInfoToPRs(commits) {
+  const prs = {};
+  for (const commit of commits) {
+    const associatedPRs = commit.associatedPullRequests.nodes.filter(
+      (pr) => pr.repository.nameWithOwner === `${githubOrg}/${githubRepo}`,
+    );
+    if (associatedPRs.length === 0) {
+      const match = / \(#(?<prNumber>[0-9]+)\)$/m.exec(commit.message);
+      if (match) {
+        prs[parseInt(match.groups.prNumber, 10)] = true;
+        continue;
+      }
+      throw new Error(
+        `Commit ${commit.oid} has no associated PR: ${commit.message}`,
+      );
+    }
+    if (associatedPRs.length > 1) {
+      throw new Error(
+        `Commit ${commit.oid} is associated with multiple PRs: ${commit.message}`,
+      );
+    }
+
+    prs[associatedPRs[0].number] = true;
+  }
+
+  return Object.keys(prs);
+}
+
+async function getPRsInfo(commits) {
+  // Split pr into batches of 50 to prevent timeouts
+  const prInfoPromises = [];
+  for (let i = 0; i < commits.length; i += 50) {
+    const batch = commits.slice(i, i + 50);
+    prInfoPromises.push(batchPRInfo(batch));
+  }
+
+  return (await Promise.all(prInfoPromises)).flat();
+}
+
+async function getCommitsInfo(commits) {
+  // Split commits into batches of 50 to prevent timeouts
+  const commitInfoPromises = [];
+  for (let i = 0; i < commits.length; i += 50) {
+    const batch = commits.slice(i, i + 50);
+    commitInfoPromises.push(batchCommitInfo(batch));
+  }
+
+  return (await Promise.all(commitInfoPromises)).flat();
+}
