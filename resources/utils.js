@@ -47,4 +47,39 @@ function rmdirRecursive(dirPath) {
 }
 
 function readdirRecursive(dirPath, opts = {}) {
-  const
+  const { ignoreDir } = opts;
+  const result = [];
+  for (const dirent of fs.readdirSync(dirPath, { withFileTypes: true })) {
+    const name = dirent.name;
+    if (!dirent.isDirectory()) {
+      result.push(dirent.name);
+      continue;
+    }
+
+    if (ignoreDir && ignoreDir.test(name)) {
+      continue;
+    }
+    const list = readdirRecursive(path.join(dirPath, name), opts).map((f) =>
+      path.join(name, f),
+    );
+    result.push(...list);
+  }
+  return result;
+}
+
+function showDirStats(dirPath) {
+  const fileTypes = {};
+  let totalSize = 0;
+
+  for (const filepath of readdirRecursive(dirPath)) {
+    const name = filepath.split(path.sep).pop();
+    const [base, ...splitExt] = name.split('.');
+    const ext = splitExt.join('.');
+
+    const filetype = ext ? '*.' + ext : base;
+    fileTypes[filetype] = fileTypes[filetype] || { filepaths: [], size: 0 };
+
+    const { size } = fs.lstatSync(path.join(dirPath, filepath));
+    totalSize += size;
+    fileTypes[filetype].size += size;
+    file
