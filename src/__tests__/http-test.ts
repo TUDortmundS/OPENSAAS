@@ -57,4 +57,44 @@ type MulterFile = {
    * callback for custom `StorageEngine`s.
    */
   stream: Readable;
-  /** `DiskStorage` only
+  /** `DiskStorage` only: Directory to which this file has been uploaded. */
+  destination: string;
+  /** `DiskStorage` only: Name of this file within `destination`. */
+  filename: string;
+  /** `DiskStorage` only: Full path to the uploaded file. */
+  path: string;
+  /** `MemoryStorage` only: A Buffer containing the entire file. */
+  buffer: Buffer;
+};
+
+declare module 'http' {
+  interface IncomingMessage {
+    file?: MulterFile | undefined;
+    /**
+     * Array or dictionary of `Multer.File` object populated by `array()`,
+     * `fields()`, and `any()` middleware.
+     */
+    files?:
+      | {
+          [fieldname: string]: Array<MulterFile>;
+        }
+      | Array<MulterFile>
+      | undefined;
+  }
+}
+
+const QueryRootType = new GraphQLObjectType({
+  name: 'QueryRoot',
+  fields: {
+    test: {
+      type: GraphQLString,
+      args: {
+        who: { type: GraphQLString },
+      },
+      resolve: (_root, args: { who?: string }) =>
+        'Hello ' + (args.who ?? 'World'),
+    },
+    thrower: {
+      type: GraphQLString,
+      resolve: () => {
+        throw new
