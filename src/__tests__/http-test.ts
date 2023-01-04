@@ -190,4 +190,41 @@ describe('GraphQL-HTTP tests', () => {
 
       app.use(
         mount(
-          url
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: `
+            query helloYou { test(who: "You"), ...shared }
+            query helloWorld { test(who: "World"), ...shared }
+            query helloDolly { test(who: "Dolly"), ...shared }
+            fragment shared on QueryRoot {
+              shared: test(who: "Everyone")
+            }
+          `,
+          operationName: 'helloWorld',
+        }),
+      );
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+          shared: 'Hello Everyone',
+        },
+      });
+    });
+
+    it('Reports validation errors', async () => {
+      const app = server();
+
+      app.use(mount(urlString(), graphqlHTTP({ schema: TestSchema })));
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{ test, unknownOne, unknownTwo }',
+     
