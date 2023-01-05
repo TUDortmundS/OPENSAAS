@@ -481,4 +481,51 @@ describe('GraphQL-HTTP tests', () => {
 
     it('Uses ctx as context by default', async () => {
       const schema = new GraphQLSchema({
-      
+        query: new GraphQLObjectType({
+          name: 'Query',
+          fields: {
+            test: {
+              type: GraphQLString,
+              resolve: (_obj, _args, context) => context.foo,
+            },
+          },
+        }),
+      });
+      const app = server();
+
+      // Middleware that adds ctx.foo to every request
+      app.use((ctx, next) => {
+        ctx.foo = 'bar';
+        return next();
+      });
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{ test }',
+        }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'bar',
+        },
+      });
+    });
+
+    it('Allows returning an options Promise', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() =
