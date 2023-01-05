@@ -388,4 +388,51 @@ describe('GraphQL-HTTP tests', () => {
           urlString(),
           graphqlHTTP({
             schema,
+            context: 'testValue',
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{ test }',
+        }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'testValue',
+        },
+      });
+    });
+
+    it('Allows passing in a fieldResolver', async () => {
+      const schema = buildSchema(`
+        type Query {
+          test: String
+        }
+      `);
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema,
+            fieldResolver: () => 'fieldResolver data',
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{ test }',
+        }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'fieldResolver data',
   
