@@ -435,4 +435,50 @@ describe('GraphQL-HTTP tests', () => {
       expect(JSON.parse(response.text)).to.deep.equal({
         data: {
           test: 'fieldResolver data',
-  
+        },
+      });
+    });
+
+    it('Allows passing in a typeResolver', async () => {
+      const schema = buildSchema(`
+        type Foo {
+          foo: String
+        }
+        type Bar {
+          bar: String
+        }
+        union UnionType = Foo | Bar
+        type Query {
+          test: UnionType
+        }
+      `);
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema,
+            rootValue: { test: {} },
+            typeResolver: () => 'Bar',
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{ test { __typename } }',
+        }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: { __typename: 'Bar' },
+        },
+      });
+    });
+
+    it('Uses ctx as context by default', async () => {
+      const schema = new GraphQLSchema({
+      
