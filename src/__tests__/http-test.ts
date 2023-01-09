@@ -528,4 +528,48 @@ describe('GraphQL-HTTP tests', () => {
       app.use(
         mount(
           urlString(),
-          graphqlHTTP(() =
+          graphqlHTTP(() =>
+            Promise.resolve({
+              schema: TestSchema,
+            }),
+          ),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{test}',
+        }),
+      );
+
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('Provides an options function with arguments', async () => {
+      const app = server();
+
+      let seenRequest;
+      let seenResponse;
+      let seenContext;
+      let seenParams;
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP((req, res, ctx, params) => {
+            seenRequest = req;
+            seenResponse = res;
+            seenContext = ctx;
+            seenParams = params;
+            return { schema: TestSchema };
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{test}',
+        }),
+      );
+
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
