@@ -617,4 +617,45 @@ describe('GraphQL-HTTP tests', () => {
       app.use(
         mount(
           urlString(),
-      
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .send({ query: '{test}' });
+
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('Allows sending a mutation via POST', async () => {
+      const app = server();
+
+      app.use(mount(urlString(), graphqlHTTP({ schema: TestSchema })));
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .send({ query: 'mutation TestMutation { writeTest { test } }' });
+
+      expect(response.status).to.equal(200);
+      expect(response.text).to.equal(
+        '{"data":{"writeTest":{"test":"Hello World"}}}',
+      );
+    });
+
+    it('allows POST with url encoding', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString()
