@@ -573,3 +573,48 @@ describe('GraphQL-HTTP tests', () => {
       );
 
       expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+
+      expect(seenRequest).to.not.equal(null);
+      expect(seenResponse).to.not.equal(null);
+      expect(seenContext).to.not.equal(null);
+      expect(seenParams).to.deep.equal({
+        query: '{test}',
+        operationName: null,
+        variables: null,
+        raw: false,
+      });
+    });
+
+    it('Catches errors thrown from options function', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => {
+            throw new Error('I did something wrong');
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{test}',
+        }),
+      );
+
+      expect(response.status).to.equal(500);
+      expect(response.text).to.equal(
+        '{"errors":[{"message":"I did something wrong"}]}',
+      );
+    });
+  });
+
+  describe('POST functionality', () => {
+    it('allows POST with JSON encoding', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+      
