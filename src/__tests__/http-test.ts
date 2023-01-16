@@ -913,4 +913,49 @@ describe('GraphQL-HTTP tests', () => {
       );
 
       const req = request(app.listen())
-        .post(urlString
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .set('Content-Encoding', 'gzip');
+
+      req.write(zlib.gzipSync('{ "query": "{ test }" }'));
+
+      const response = await req;
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+        },
+      });
+    });
+
+    it('allows deflated POST bodies', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const req = request(app.listen())
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .set('Content-Encoding', 'deflate');
+
+      req.write(zlib.deflateSync('{ "query": "{ test }" }'));
+
+      const response = await req;
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+        },
+      });
+    });
+
+    // should replace multer with koa middleware
+    it('allows for pre-parsed POST bodies', async () => {
+      // Note: this is not the only way to handle fil
