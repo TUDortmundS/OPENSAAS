@@ -958,4 +958,33 @@ describe('GraphQL-HTTP tests', () => {
 
     // should replace multer with koa middleware
     it('allows for pre-parsed POST bodies', async () => {
-      // Note: this is not the only way to handle fil
+      // Note: this is not the only way to handle file uploads with GraphQL,
+      // but it is terse and illustrative of using koa-graphql and multer
+      // together.
+
+      // A simple schema which includes a mutation.
+      const UploadedFileType = new GraphQLObjectType({
+        name: 'UploadedFile',
+        fields: {
+          originalname: { type: GraphQLString },
+          mimetype: { type: GraphQLString },
+        },
+      });
+
+      const TestMutationSchema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'QueryRoot',
+          fields: {
+            test: { type: GraphQLString },
+          },
+        }),
+        mutation: new GraphQLObjectType({
+          name: 'MutationRoot',
+          fields: {
+            uploadFile: {
+              type: UploadedFileType,
+              resolve(rootValue) {
+                // For this test demo, we're just returning the uploaded
+                // file directly, but presumably you might return a Promise
+                // to go store the file somewhere first.
+                return root
