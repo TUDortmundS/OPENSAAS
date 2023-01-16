@@ -1025,4 +1025,39 @@ describe('GraphQL-HTTP tests', () => {
         )
         .attach('file', Buffer.from('test'), 'test.txt');
 
-     
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          uploadFile: {
+            originalname: 'test.txt',
+            mimetype: 'text/plain',
+          },
+        },
+      });
+    });
+
+    it('allows for pre-parsed POST using application/graphql', async () => {
+      const app = server();
+      app.use(async (ctx, next) => {
+        if (typeof ctx.is('application/graphql') === 'string') {
+          // eslint-disable-next-line require-atomic-updates
+          ctx.request.body = await parseBody.text(ctx);
+        }
+        return next();
+      });
+
+      app.use(mount(urlString(), graphqlHTTP({ schema: TestSchema })));
+
+      const req = request(app.listen())
+        .post(urlString())
+        .set('Content-Type', 'application/graphql');
+      req.write(Buffer.from('{ test(who: "World") }'));
+      const response = await req;
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+        },
+      });
+    });
+
+    it('
