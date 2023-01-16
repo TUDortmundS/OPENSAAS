@@ -783,3 +783,45 @@ describe('GraphQL-HTTP tests', () => {
     });
 
     it('supports POST raw text query with GET variable values', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(
+          urlString({
+            variables: JSON.stringify({ who: 'Dolly' }),
+          }),
+        )
+        .set('Content-Type', 'application/graphql')
+        .send('query helloWho($who: String){ test(who: $who) }');
+
+      expect(response.text).to.equal('{"data":{"test":"Hello Dolly"}}');
+    });
+
+    it('allows POST with operation name', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .send({
+          query: `
+            query helloYou { test(who: "You"), ...shared }
+            query helloWorld { test(who: "World"), ...shared }
+            query helloDolly { tes
