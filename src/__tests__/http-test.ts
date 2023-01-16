@@ -863,4 +863,54 @@ describe('GraphQL-HTTP tests', () => {
           query helloWorld { test(who: "World"), ...shared }
           query helloDolly { test(who: "Dolly"), ...shared }
           fragment shared on QueryRoot {
-            shared: test(who: "
+            shared: test(who: "Everyone")
+          }
+        `);
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+          shared: 'Hello Everyone',
+        },
+      });
+    });
+
+    it('allows other UTF charsets', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const req = request(app.listen())
+        .post(urlString())
+        .set('Content-Type', 'application/graphql; charset=utf-16');
+      req.write(Buffer.from('{ test(who: "World") }', 'utf16le'));
+      const response = await req;
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+        },
+      });
+    });
+
+    it('allows gzipped POST bodies', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const req = request(app.listen())
+        .post(urlString
