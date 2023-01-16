@@ -824,4 +824,43 @@ describe('GraphQL-HTTP tests', () => {
           query: `
             query helloYou { test(who: "You"), ...shared }
             query helloWorld { test(who: "World"), ...shared }
-            query helloDolly { tes
+            query helloDolly { test(who: "Dolly"), ...shared }
+            fragment shared on QueryRoot {
+              shared: test(who: "Everyone")
+            }
+          `,
+          operationName: 'helloWorld',
+        });
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World',
+          shared: 'Hello Everyone',
+        },
+      });
+    });
+
+    it('allows POST with GET operation name', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(
+          urlString({
+            operationName: 'helloWorld',
+          }),
+        )
+        .set('Content-Type', 'application/graphql').send(`
+          query helloYou { test(who: "You"), ...shared }
+          query helloWorld { test(who: "World"), ...shared }
+          query helloDolly { test(who: "Dolly"), ...shared }
+          fragment shared on QueryRoot {
+            shared: test(who: "
