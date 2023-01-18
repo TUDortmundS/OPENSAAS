@@ -1128,4 +1128,55 @@ describe('GraphQL-HTTP tests', () => {
 
       const response = await request(app.listen()).get(
         urlString({
-          query: '{
+          query: '{test}',
+        }),
+      );
+
+      expect(response.text).to.equal(
+        [
+          // Pretty printed JSON
+          '{',
+          '  "data": {',
+          '    "test": "Hello World"',
+          '  }',
+          '}',
+        ].join('\n'),
+      );
+    });
+
+    it('supports pretty printing configured by request', async () => {
+      const app = server();
+      let pretty: boolean | undefined;
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+            pretty,
+          })),
+        ),
+      );
+
+      pretty = undefined;
+      const defaultResponse = await request(app.listen()).get(
+        urlString({
+          query: '{test}',
+        }),
+      );
+
+      expect(defaultResponse.text).to.equal('{"data":{"test":"Hello World"}}');
+
+      pretty = true;
+      const prettyResponse = await request(app.listen()).get(
+        urlString({
+          query: '{test}',
+          pretty: '1',
+        }),
+      );
+
+      expect(prettyResponse.text).to.equal(
+        [
+          // Pretty printed JSON
+          '{',
+  
