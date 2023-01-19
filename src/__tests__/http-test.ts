@@ -1224,4 +1224,44 @@ describe('GraphQL-HTTP tests', () => {
     expect(seenContext).to.not.equal(undefined);
   });
 
-  describ
+  describe('Error handling functionality', () => {
+    it('handles field errors caught by GraphQL', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{thrower}',
+        }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: { thrower: null },
+        errors: [
+          {
+            message: 'Throws!',
+            locations: [{ line: 1, column: 2 }],
+            path: ['thrower'],
+          },
+        ],
+      });
+    });
+
+    it('handles query errors from non-null top field errors', async () => {
+      const schema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'Query',
+          fields: {
+            test: {
+              type: new GraphQLNonNull(GraphQLString),
+              resolve() {
+                throw 
