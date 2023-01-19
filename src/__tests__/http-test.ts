@@ -1264,4 +1264,51 @@ describe('GraphQL-HTTP tests', () => {
             test: {
               type: new GraphQLNonNull(GraphQLString),
               resolve() {
-                throw 
+                throw new Error('Throws!');
+              },
+            },
+          },
+        }),
+      });
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{ test }',
+        }),
+      );
+
+      expect(response.status).to.equal(500);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: null,
+        errors: [
+          {
+            message: 'Throws!',
+            locations: [{ line: 1, column: 3 }],
+            path: ['test'],
+          },
+        ],
+      });
+    });
+
+    it('allows for custom error formatting to sanitize', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            customFormatErrorFn(error) {
+              return { message: 'Custom error format: ' + error.message };
+            },
+      
