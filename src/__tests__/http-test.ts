@@ -1179,4 +1179,49 @@ describe('GraphQL-HTTP tests', () => {
         [
           // Pretty printed JSON
           '{',
-  
+          '  "data": {',
+          '    "test": "Hello World"',
+          '  }',
+          '}',
+        ].join('\n'),
+      );
+
+      pretty = false;
+      const unprettyResponse = await request(app.listen()).get(
+        urlString({
+          query: '{test}',
+          pretty: '0',
+        }),
+      );
+
+      expect(unprettyResponse.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+  });
+
+  it('will send request, response and context when using thunk', async () => {
+    const app = server();
+
+    let seenRequest;
+    let seenResponse;
+    let seenContext;
+
+    app.use(
+      mount(
+        urlString(),
+        graphqlHTTP((req, res, ctx) => {
+          seenRequest = req;
+          seenResponse = res;
+          seenContext = ctx;
+          return { schema: TestSchema };
+        }),
+      ),
+    );
+
+    await request(app.listen()).get(urlString({ query: '{test}' }));
+
+    expect(seenRequest).to.not.equal(undefined);
+    expect(seenResponse).to.not.equal(undefined);
+    expect(seenContext).to.not.equal(undefined);
+  });
+
+  describ
