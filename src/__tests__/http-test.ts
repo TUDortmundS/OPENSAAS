@@ -1402,4 +1402,45 @@ describe('GraphQL-HTTP tests', () => {
     it('handles errors caused by a lack of query', async () => {
       const app = server();
 
-    
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(urlString());
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'Must provide query string.' }],
+      });
+    });
+
+    it('handles invalid JSON bodies', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .send('[]');
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'POST body sent invalid JSON.' }],
+      });
+    });
+
+    it('handles incomplete JSON bodies', async () => {
+      const
