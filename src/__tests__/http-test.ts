@@ -1443,4 +1443,48 @@ describe('GraphQL-HTTP tests', () => {
     });
 
     it('handles incomplete JSON bodies', async () => {
-      const
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .send('{"query":');
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'POST body sent invalid JSON.' }],
+      });
+    });
+
+    it('handles plain POST text', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(
+          urlString({
+            variables: JSON.stringify({ who: 'Dolly' }),
+          }),
+        )
+        .set('Content-Type', 'text/plain')
+        .send('query helloWho($who: String){ test(who: $who) }');
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse
