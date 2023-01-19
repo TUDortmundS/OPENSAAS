@@ -1528,4 +1528,45 @@ describe('GraphQL-HTTP tests', () => {
       );
 
       const response = await request(app.listen())
-        .post(urlStri
+        .post(urlString())
+        .set('Content-Type', 'application/graphql; charset=utf-53')
+        .send('{ test(who: "World") }');
+
+      expect(response.status).to.equal(415);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'Unsupported charset "UTF-53".' }],
+      });
+    });
+
+    it('handles unknown encoding', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .set('Content-Encoding', 'garbage')
+        .send('!@#$%^*(&^$%#@');
+
+      expect(response.status).to.equal(415);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'Unsupported content-encoding "garbage".' }],
+      });
+    });
+
+    it('handles invalid body', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+   
