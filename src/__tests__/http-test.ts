@@ -1609,4 +1609,45 @@ describe('GraphQL-HTTP tests', () => {
       });
     });
 
-    it('`formatErro
+    it('`formatError` is deprecated', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            formatError(error) {
+              return { message: 'Custom error format: ' + error.message };
+            },
+          }),
+        ),
+      );
+
+      const spy = sinon.spy(console, 'warn');
+
+      const response = await request(app.listen()).get(
+        urlString({
+          variables: 'who:You',
+          query: 'query helloWho($who: String){ test(who: $who) }',
+        }),
+      );
+
+      expect(
+        spy.calledWith(
+          '`formatError` is deprecated and replaced by `customFormatErrorFn`. It will be removed in version 1.0.0.',
+        ),
+      );
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [
+          {
+            message: 'Custom error format: Variables are invalid JSON.',
+          },
+        ],
+      });
+
+      spy.restore();
+    });
+
+    it('allows for custom error formattin
