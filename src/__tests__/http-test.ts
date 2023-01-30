@@ -1569,4 +1569,44 @@ describe('GraphQL-HTTP tests', () => {
           urlString(),
           graphqlHTTP(() => ({
             schema: TestSchema,
-   
+          })),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .send(`{ "query": "{ ${new Array(102400).fill('test').join('')} }" }`);
+
+      expect(response.status).to.equal(413);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'Invalid body: request entity too large.' }],
+      });
+    });
+
+    it('handles poorly formed variables', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          variables: 'who:You',
+          query: 'query helloWho($who: String){ test(who: $who) }',
+        }),
+      );
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'Variables are invalid JSON.' }],
+      });
+    });
+
+    it('`formatErro
