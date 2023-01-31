@@ -1770,3 +1770,41 @@ describe('GraphQL-HTTP tests', () => {
       app.use(mount(urlString(), graphqlHTTP({ schema: TestSchema })));
 
       const response = await request(app.listen())
+        .get(urlString({ query: '{test}' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application/json');
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('presents GraphiQL when accepting HTML', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      expect(response.text).to.include('graphiql.min.js');
+    });
+
+    it('contains a default query within GraphiQL', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+    
