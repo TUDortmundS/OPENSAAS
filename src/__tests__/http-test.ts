@@ -1733,4 +1733,40 @@ describe('GraphQL-HTTP tests', () => {
           {
             locations: [{ column: 16, line: 1 }],
             message:
-              'Variable "$who" g
+              'Variable "$who" got invalid value ["John", "Jane"]; String cannot represent a non string value: ["John", "Jane"]',
+          },
+        ],
+      });
+    });
+
+    it('handles unsupported HTTP methods', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).put(
+        urlString({ query: '{test}' }),
+      );
+
+      expect(response.status).to.equal(405);
+      expect(response.get('allow')).to.equal('GET, POST');
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [{ message: 'GraphQL only supports GET and POST requests.' }],
+      });
+    });
+  });
+
+  describe('Built-in GraphiQL support', () => {
+    it('does not renders GraphiQL if no opt-in', async () => {
+      const app = server();
+
+      app.use(mount(urlString(), graphqlHTTP({ schema: TestSchema })));
+
+      const response = await request(app.listen())
