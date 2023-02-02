@@ -2123,4 +2123,38 @@ describe('GraphQL-HTTP tests', () => {
       );
 
       const response = await request(app.listen())
-        .get(urlString(
+        .get(urlString())
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      // should contain the function to make fetcher for subscription or non-subscription
+      expect(response.text).to.include('makeFetcher');
+      // should contain subscriptions-transport-ws browser client
+      expect(response.text).to.include('SubscriptionsTransportWs');
+
+      // should contain the subscriptionEndpoint url
+      expect(response.text).to.include('ws:\\/\\/localhost');
+    });
+
+    it('contains subscriptionEndpoint within GraphiQL with websocketClient option', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: {
+              subscriptionEndpoint: 'ws://localhost',
+              websocketClient: 'v1',
+            },
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString())
+        .set('Accept', 'text/html');
+
+      expect(
