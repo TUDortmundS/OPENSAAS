@@ -2084,4 +2084,43 @@ describe('GraphQL-HTTP tests', () => {
 
       expect(response.status).to.equal(200);
       expect(response.type).to.equal('application/json');
-      expect(resp
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('prefers JSON if explicitly requested raw response', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application/json');
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('contains subscriptionEndpoint within GraphiQL', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: { subscriptionEndpoint: 'ws://localhost' },
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString(
