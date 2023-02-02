@@ -1962,4 +1962,49 @@ describe('GraphQL-HTTP tests', () => {
         .set('Accept', 'text/html');
 
       expect(response.status).to.equal(200);
-      expect(respon
+      expect(response.type).to.equal('text/html');
+      expect(response.text).to.include(
+        'variables: ' +
+          JSON.stringify(JSON.stringify({ who: 'Dolly' }, null, 2)),
+      );
+    });
+
+    it('GraphiQL accepts an empty query', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString())
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      expect(response.text).to.include('response: undefined');
+    });
+
+    it('GraphiQL accepts a mutation query - does not execute it', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(
+          urlString({
+    
