@@ -2044,4 +2044,44 @@ describe('GraphQL-HTTP tests', () => {
     });
 
     it('returns JSON if preferred', async () => {
- 
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}' }))
+        .set('Accept', 'application/json,text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application/json');
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('prefers JSON if unknown accept', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}' }))
+        .set('Accept', 'unknown');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application/json');
+      expect(resp
