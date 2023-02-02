@@ -2157,4 +2157,38 @@ describe('GraphQL-HTTP tests', () => {
         .get(urlString())
         .set('Accept', 'text/html');
 
-      expect(
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      // should contain graphql-ws browser client
+      expect(response.text).to.include('graphql-transport-ws');
+
+      // should contain the subscriptionEndpoint url
+      expect(response.text).to.include('ws:\\/\\/localhost');
+    });
+  });
+
+  describe('Custom validate function', () => {
+    it('returns data', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            customValidateFn(schema, documentAST, validationRules) {
+              return validate(schema, documentAST, validationRules);
+            },
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+
+    it('returns validation errors', async () => {
