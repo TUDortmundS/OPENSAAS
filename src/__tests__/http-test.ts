@@ -2234,3 +2234,47 @@ describe('GraphQL-HTTP tests', () => {
           context.reportError(
             new GraphQLError('AlwaysInvalidRule was really invalid!'),
           );
+        },
+      };
+    };
+
+    it('Do not execute a query if it do not pass the custom validation.', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            validationRules: [AlwaysInvalidRule],
+            pretty: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{thrower}',
+        }),
+      );
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [
+          {
+            message: 'AlwaysInvalidRule was really invalid!',
+          },
+        ],
+      });
+    });
+  });
+
+  describe('Session support', () => {
+    it('supports koa-session', async () => {
+      const SessionAwareGraphQLSchema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'MyType',
+          fields: {
+            myField: {
+              type: GraphQLString,
+              r
