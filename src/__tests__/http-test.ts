@@ -2192,3 +2192,45 @@ describe('GraphQL-HTTP tests', () => {
     });
 
     it('returns validation errors', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            customValidateFn(schema, documentAST, validationRules) {
+              const errors = validate(schema, documentAST, validationRules);
+
+              return [new GraphQLError(`custom error ${errors.length}`)];
+            },
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{thrower}',
+        }),
+      );
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [
+          {
+            message: 'custom error 0',
+          },
+        ],
+      });
+    });
+  });
+
+  describe('Custom validation rules', () => {
+    const AlwaysInvalidRule = function (
+      context: ValidationContext,
+    ): ASTVisitor {
+      return {
+        Document() {
+          context.reportError(
+            new GraphQLError('AlwaysInvalidRule was really invalid!'),
+          );
