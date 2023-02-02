@@ -2007,4 +2007,41 @@ describe('GraphQL-HTTP tests', () => {
       const response = await request(app.listen())
         .get(
           urlString({
-    
+            query: 'mutation TestMutation { writeTest { test } }',
+          }),
+        )
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      expect(response.text).to.include(
+        'query: "mutation TestMutation { writeTest { test } }"',
+      );
+      expect(response.text).to.include('response: undefined');
+    });
+
+    it('returns HTML if preferred', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}' }))
+        .set('Accept', 'text/html,application/json');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      expect(response.text).to.include('{test}');
+      expect(response.text).to.include('graphiql.min.js');
+    });
+
+    it('returns JSON if preferred', async () => {
+ 
