@@ -1925,3 +1925,41 @@ describe('GraphQL-HTTP tests', () => {
         .get(
           urlString({
             query: 'query helloWho($who: String) { test(who: $who) }',
+            variables: JSON.stringify({
+              who: '</script><script>alert(1)</script>',
+            }),
+          }),
+        )
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('text/html');
+      expect(response.text).to.not.include(
+        '</script><script>alert(1)</script>',
+      );
+    });
+
+    it('GraphiQL renders provided variables', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            graphiql: true,
+          }),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(
+          urlString({
+            query: 'query helloWho($who: String) { test(who: $who) }',
+            variables: JSON.stringify({ who: 'Dolly' }),
+          }),
+        )
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(respon
