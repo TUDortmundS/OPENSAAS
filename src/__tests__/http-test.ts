@@ -2477,4 +2477,44 @@ describe('GraphQL-HTTP tests', () => {
       );
 
       const response = await request(app.listen()).get(
- 
+        urlString({
+          query: '{thrower}',
+        }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: { thrower: null },
+        errors: [{ message: 'Some generic error message.' }],
+        extensions: {
+          preservedResult: {
+            data: { thrower: null },
+            errors: [
+              {
+                message: 'Throws!',
+                locations: [{ line: 1, column: 2 }],
+                path: ['thrower'],
+              },
+            ],
+          },
+        },
+      });
+    });
+
+    it('extension function may be async', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            extensions() {
+              // Note: you can await arbitrary things here!
+              return Promise.resolve({ eventually: 42 });
+            },
+          }),
+        ),
+      );
+
+      const response = a
