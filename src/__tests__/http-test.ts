@@ -2441,4 +2441,40 @@ describe('GraphQL-HTTP tests', () => {
             schema: TestSchema,
             context: { foo: 'bar' },
             extensions({ context }) {
-              retur
+              return { contextValue: JSON.stringify(context) };
+            },
+          })),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application/json');
+      expect(response.text).to.equal(
+        '{"data":{"test":"Hello World"},"extensions":{"contextValue":"{\\"foo\\":\\"bar\\"}"}}',
+      );
+    });
+
+    it('extensions have access to initial GraphQL result', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP({
+            schema: TestSchema,
+            customFormatErrorFn: () => ({
+              message: 'Some generic error message.',
+            }),
+            extensions({ result }) {
+              return { preservedResult: { ...result } };
+            },
+          }),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+ 
