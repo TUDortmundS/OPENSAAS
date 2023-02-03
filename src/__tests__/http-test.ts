@@ -2550,4 +2550,8 @@ describe('GraphQL-HTTP tests', () => {
         .set('Accept', 'text/html');
 
       expect(response.status).to.equal(200);
-      expect(response.type).to.equal('application
+      expect(response.type).to.equal('application/json');
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+    });
+  });
+});
