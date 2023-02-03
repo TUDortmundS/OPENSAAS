@@ -2324,4 +2324,42 @@ describe('GraphQL-HTTP tests', () => {
         mount(
           urlString(),
           graphqlHTTP(() => ({
-            schema: TestSche
+            schema: TestSchema,
+            async customExecuteFn(args) {
+              seenExecuteArgs = args;
+              const result = await Promise.resolve(execute(args));
+              return {
+                ...result,
+                data: {
+                  ...result.data,
+                  test2: 'Modification',
+                },
+              };
+            },
+          })),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.text).to.equal(
+        '{"data":{"test":"Hello World","test2":"Modification"}}',
+      );
+      expect(seenExecuteArgs).to.not.equal(null);
+    });
+
+    it('catches errors thrown from custom execute function', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+            customExecuteFn() {
+              throw new Error('I did something wrong');
+            },
+          })),
+        )
