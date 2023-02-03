@@ -2362,4 +2362,43 @@ describe('GraphQL-HTTP tests', () => {
               throw new Error('I did something wrong');
             },
           })),
-        )
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(400);
+      expect(response.text).to.equal(
+        '{"errors":[{"message":"I did something wrong"}]}',
+      );
+    });
+  });
+
+  describe('Custom parse function', () => {
+    it('can replace default parse functionality', async () => {
+      const app = server();
+
+      let seenParseArgs;
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+            customParseFn(args) {
+              seenParseArgs = args;
+              return parse(new Source('{test}', 'Custom parse function'));
+            },
+          })),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({ query: '----' }),
+      );
+
+      expect(response.status).to.equal(200);
+      expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
+      expect(seenParseArgs).property('body', 
