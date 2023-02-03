@@ -2277,4 +2277,51 @@ describe('GraphQL-HTTP tests', () => {
           fields: {
             myField: {
               type: GraphQLString,
-              r
+              resolve(_parentValue, _, sess) {
+                return sess.id;
+              },
+            },
+          },
+        }),
+      });
+      const app = server();
+      app.keys = ['some secret hurr'];
+      app.use(session(app));
+      app.use((ctx, next) => {
+        if (ctx.session !== null) {
+          ctx.session.id = 'me';
+        }
+        return next();
+      });
+
+      app.use(
+        mount(
+          '/graphql',
+          graphqlHTTP((_req, _res, ctx) => ({
+            schema: SessionAwareGraphQLSchema,
+            context: ctx.session,
+          })),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({
+          query: '{myField}',
+        }),
+      );
+
+      expect(response.text).to.equal('{"data":{"myField":"me"}}');
+    });
+  });
+
+  describe('Custom execute', () => {
+    it('allow to replace default execute', async () => {
+      const app = server();
+
+      let seenExecuteArgs;
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSche
