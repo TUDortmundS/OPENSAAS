@@ -72,4 +72,39 @@ describe('Useful errors when incorrectly used', () => {
         // @ts-expect-error
         graphqlHTTP(() => ({})),
       ),
-   
+    );
+
+    const response = await request(app.listen()).get('/graphql?query={test}');
+
+    expect(response.status).to.equal(500);
+    expect(JSON.parse(response.text)).to.deep.equal({
+      errors: [
+        { message: 'GraphQL middleware options must contain a schema.' },
+      ],
+    });
+  });
+
+  it('requires option factory function to return object or promise of object with schema', async () => {
+    const app = new Koa();
+
+    app.use(
+      mount(
+        '/graphql',
+        // @ts-expect-error
+        graphqlHTTP(() => Promise.resolve({})),
+      ),
+    );
+
+    const response = await request(app.listen()).get('/graphql?query={test}');
+
+    expect(response.status).to.equal(500);
+    expect(JSON.parse(response.text)).to.deep.equal({
+      errors: [
+        { message: 'GraphQL middleware options must contain a schema.' },
+      ],
+    });
+  });
+
+  it('validates schema before executing request', async () => {
+    // @ts-expect-error
+    const schema = new GraphQLSchema({ directives: [nu
