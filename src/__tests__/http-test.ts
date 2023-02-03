@@ -2517,4 +2517,37 @@ describe('GraphQL-HTTP tests', () => {
         ),
       );
 
-      const response = a
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application/json');
+      expect(response.text).to.equal(
+        '{"data":{"test":"Hello World"},"extensions":{"eventually":42}}',
+      );
+    });
+
+    it('does nothing if extensions function does not return an object', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          // @ts-expect-error
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+            context: { foo: 'bar' },
+            extensions({ context }) {
+              return () => ({ contextValue: JSON.stringify(context) });
+            },
+          })),
+        ),
+      );
+
+      const response = await request(app.listen())
+        .get(urlString({ query: '{test}', raw: '' }))
+        .set('Accept', 'text/html');
+
+      expect(response.status).to.equal(200);
+      expect(response.type).to.equal('application
