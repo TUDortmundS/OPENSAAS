@@ -2401,4 +2401,44 @@ describe('GraphQL-HTTP tests', () => {
 
       expect(response.status).to.equal(200);
       expect(response.text).to.equal('{"data":{"test":"Hello World"}}');
-      expect(seenParseArgs).property('body', 
+      expect(seenParseArgs).property('body', '----');
+    });
+
+    it('can throw errors', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+            customParseFn() {
+              throw new GraphQLError('my custom parse error');
+            },
+          })),
+        ),
+      );
+
+      const response = await request(app.listen()).get(
+        urlString({ query: '----' }),
+      );
+
+      expect(response.status).to.equal(400);
+      expect(response.text).to.equal(
+        '{"errors":[{"message":"my custom parse error"}]}',
+      );
+    });
+  });
+
+  describe('Custom result extensions', () => {
+    it('allows for adding extensions', async () => {
+      const app = server();
+
+      app.use(
+        mount(
+          urlString(),
+          graphqlHTTP(() => ({
+            schema: TestSchema,
+            context: { foo: 'bar' },
+            extensions({ context }) {
+              retur
