@@ -107,4 +107,25 @@ describe('Useful errors when incorrectly used', () => {
 
   it('validates schema before executing request', async () => {
     // @ts-expect-error
-    const schema = new GraphQLSchema({ directives: [nu
+    const schema = new GraphQLSchema({ directives: [null] });
+
+    const app = new Koa();
+
+    app.use(
+      mount(
+        '/graphql',
+        graphqlHTTP(() => Promise.resolve({ schema })),
+      ),
+    );
+
+    const response = await request(app.listen()).get('/graphql?query={test}');
+
+    expect(response.status).to.equal(500);
+    expect(JSON.parse(response.text)).to.deep.equal({
+      errors: [
+        { message: 'Query root type must be provided.' },
+        { message: 'Expected directive but got: null.' },
+      ],
+    });
+  });
+});
