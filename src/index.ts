@@ -66,4 +66,33 @@ export interface OptionsData {
   rootValue?: unknown;
 
   /**
-  
+   * A boolean to configure whether the output should be pretty-printed.
+   */
+  pretty?: boolean;
+
+  /**
+   * An optional array of validation rules that will be applied on the document
+   * in additional to those defined by the GraphQL spec.
+   */
+  validationRules?: ReadonlyArray<(ctx: ValidationContext) => ASTVisitor>;
+
+  /**
+   * An optional function which will be used to validate instead of default `validate`
+   * from `graphql-js`.
+   */
+  customValidateFn?: (
+    schema: GraphQLSchema,
+    documentAST: DocumentNode,
+    rules: ReadonlyArray<any>,
+  ) => ReadonlyArray<GraphQLError>;
+
+  /**
+   * An optional function which will be used to execute instead of default `execute`
+   * from `graphql-js`.
+   */
+  customExecuteFn?: (args: ExecutionArgs) => MaybePromise<ExecutionResult>;
+
+  /**
+   * An optional function which will be used to format any errors produced by
+   * fulfilling a GraphQL operation. If no function is provided, GraphQL's
+   * default spec-compliant `formatError` function will be used.
