@@ -96,3 +96,31 @@ export interface OptionsData {
    * An optional function which will be used to format any errors produced by
    * fulfilling a GraphQL operation. If no function is provided, GraphQL's
    * default spec-compliant `formatError` function will be used.
+   */
+  customFormatErrorFn?: (error: GraphQLError) => GraphQLFormattedError;
+
+  /**
+   * An optional function which will be used to create a document instead of
+   * the default `parse` from `graphql-js`.
+   */
+  customParseFn?: (source: Source) => DocumentNode;
+
+  /**
+   * `formatError` is deprecated and replaced by `customFormatErrorFn`. It will
+   *  be removed in version 1.0.0.
+   */
+  formatError?: (error: GraphQLError, context?: any) => GraphQLFormattedError;
+
+  /**
+   * An optional function for adding additional metadata to the GraphQL response
+   * as a key-value object. The result will be added to "extensions" field in
+   * the resulting JSON. This is often a useful place to add development time
+   * info such as the runtime of a query or the amount of resources consumed.
+   *
+   * Information about the request is provided to be used.
+   *
+   * This function may be async.
+   */
+  extensions?: (
+    info: RequestInfo,
+  ) => MaybePromise<undefined | { [key: string]: unknown }>;
