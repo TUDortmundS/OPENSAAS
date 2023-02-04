@@ -124,3 +124,32 @@ export interface OptionsData {
   extensions?: (
     info: RequestInfo,
   ) => MaybePromise<undefined | { [key: string]: unknown }>;
+
+  /**
+   * A boolean to optionally enable GraphiQL mode.
+   * Alternatively, instead of `true` you can pass in an options object.
+   */
+  graphiql?: boolean | GraphiQLOptions;
+
+  /**
+   * A resolver function to use when one is not provided by the schema.
+   * If not provided, the default field resolver is used (which looks for a
+   * value or method on the source value with the field's name).
+   */
+  fieldResolver?: GraphQLFieldResolver<unknown, unknown>;
+
+  /**
+   * A type resolver function to use when none is provided by the schema.
+   * If not provided, the default type resolver is used (which looks for a
+   * `__typename` field or alternatively calls the `isTypeOf` method).
+   */
+  typeResolver?: GraphQLTypeResolver<unknown, unknown>;
+}
+
+type Middleware = (ctx: Context) => Promise<void>;
+
+/**
+ * Middleware for express; takes an options object or function as input to
+ * configure behavior, and returns an express middleware.
+ */
+export function graphqlHTTP(options: Option
