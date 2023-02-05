@@ -391,4 +391,41 @@ export function graphqlHTTP(options: Options): Middleware {
       ? JSON.stringify(formattedResult, null, 2)
       : formattedResult;
     response.type = 'application/json';
-    r
+    response.body = payload;
+
+    async function resolveOptions(
+      requestParams?: GraphQLParams,
+    ): Promise<OptionsData> {
+      const optionsResult = await Promise.resolve(
+        typeof options === 'function'
+          ? options(request, response, ctx, requestParams)
+          : options,
+      );
+
+      devAssertIsObject(
+        optionsResult,
+        'GraphQL middleware option function must return an options object or a promise which will be resolved to an options object.',
+      );
+
+      if (optionsResult.formatError) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '`formatError` is deprecated and replaced by `customFormatErrorFn`. It will be removed in version 1.0.0.',
+        );
+      }
+
+      return optionsResult;
+    }
+  };
+}
+
+function respondWithGraphiQL(
+  response: Response,
+  options?: GraphiQLOptions,
+  params?: GraphQLParams,
+  result?: FormattedExecutionResult,
+): void {
+  const data: GraphiQLData = {
+    query: params?.query,
+    variables: params?.variables,
+    operationName: params?.operati
