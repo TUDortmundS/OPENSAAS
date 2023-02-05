@@ -180,4 +180,27 @@ export function graphqlHTTP(options: Options): Middleware {
       } catch (error: unknown) {
         // When we failed to parse the GraphQL parameters, we still need to get
         // the options object, so make an options call to resolve just that.
-        co
+        const optionsData = await resolveOptions();
+        pretty = optionsData.pretty ?? false;
+        formatErrorFn =
+          optionsData.customFormatErrorFn ??
+          optionsData.formatError ??
+          formatErrorFn;
+        throw error;
+      }
+
+      // Then, resolve the Options to get OptionsData.
+      const optionsData = await resolveOptions(params);
+
+      // Collect information from the options data object.
+      const schema = optionsData.schema;
+      const rootValue = optionsData.rootValue;
+      const validationRules = optionsData.validationRules ?? [];
+      const fieldResolver = optionsData.fieldResolver;
+      const typeResolver = optionsData.typeResolver;
+      const graphiql = optionsData.graphiql ?? false;
+      const extensionsFn = optionsData.extensions;
+      const context = optionsData.context ?? ctx;
+      const parseFn = optionsData.customParseFn ?? parse;
+      const executeFn = optionsData.customExecuteFn ?? execute;
+      const validateFn = optionsData.customValidateFn ?? valid
