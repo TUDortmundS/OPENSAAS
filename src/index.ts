@@ -264,4 +264,29 @@ export function graphqlHTTP(options: Options): Middleware {
       // Validate AST, reporting any errors.
       const validationErrors = validateFn(schema, documentAST, [
         ...specifiedRules,
-        ...
+        ...validationRules,
+      ]);
+
+      if (validationErrors.length > 0) {
+        // Return 400: Bad Request if any validation errors exist.
+        throw httpError(400, 'GraphQL validation error.', {
+          graphqlErrors: validationErrors,
+        });
+      }
+
+      // Only query operations are allowed on GET requests.
+      if (request.method === 'GET') {
+        // Determine if this GET request will perform a non-query.
+        const operationAST = getOperationAST(documentAST, operationName);
+        if (operationAST && operationAST.operation !== 'query') {
+          // If GraphiQL can be shown, do not perform this query, but
+          // provide it to GraphiQL so that the requester may perform it
+          // themselves if desired.
+          if (showGraphiQL) {
+            return respondWithGraphiQL(response, graphiqlOptions, params);
+          }
+
+          // Otherwise, report a 405: Method Not Allowed error.
+          throw httpError(
+            405,
+            `Can only perform a ${
