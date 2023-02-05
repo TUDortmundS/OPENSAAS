@@ -357,4 +357,38 @@ export function graphqlHTTP(options: Options): Middleware {
         );
         result = { data: undefined, errors: [graphqlError] };
       } else {
-        result = { data: undefined, errors: error.graphqlE
+        result = { data: undefined, errors: error.graphqlErrors };
+      }
+    }
+
+    // If no data was included in the result, that indicates a runtime query
+    // error, indicate as such with a generic status code.
+    // Note: Information about the error itself will still be contained in
+    // the resulting JSON payload.
+    // https://graphql.github.io/graphql-spec/#sec-Data
+    if (response.status === 200 && result.data == null) {
+      response.status = 500;
+    }
+
+    // Format any encountered errors.
+    const formattedResult: FormattedExecutionResult = {
+      ...result,
+      errors: result.errors?.map(formatErrorFn),
+    };
+
+    // If allowed to show GraphiQL, present it instead of JSON.
+    if (showGraphiQL) {
+      return respondWithGraphiQL(
+        response,
+        graphiqlOptions,
+        params,
+        formattedResult,
+      );
+    }
+
+    // Otherwise, present JSON directly.
+    const payload = pretty
+      ? JSON.stringify(formattedResult, null, 2)
+      : formattedResult;
+    response.type = 'application/json';
+    r
