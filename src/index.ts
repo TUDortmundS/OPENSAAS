@@ -320,4 +320,41 @@ export function graphqlHTTP(options: Options): Middleware {
       if (extensionsFn) {
         const extensions = await extensionsFn({
           document: documentAST,
-          varia
+          variables,
+          operationName,
+          result,
+          context,
+        });
+
+        if (extensions != null) {
+          result = { ...result, extensions };
+        }
+      }
+    } catch (rawError: unknown) {
+      // If an error was caught, report the httpError status, or 500.
+      const error = httpError(
+        500,
+        /* istanbul ignore next: Thrown by underlying library. */
+        rawError instanceof Error ? rawError : String(rawError),
+      );
+      response.status = error.status;
+
+      const { headers } = error;
+      if (headers != null) {
+        for (const [key, value] of Object.entries(headers)) {
+          response.set(key, value);
+        }
+      }
+
+      if (error.graphqlErrors == null) {
+        const graphqlError = new GraphQLError(
+          error.message,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          error,
+        );
+        result = { data: undefined, errors: [graphqlError] };
+      } else {
+        result = { data: undefined, errors: error.graphqlE
