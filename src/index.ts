@@ -289,4 +289,35 @@ export function graphqlHTTP(options: Options): Middleware {
           // Otherwise, report a 405: Method Not Allowed error.
           throw httpError(
             405,
-            `Can only perform a ${
+            `Can only perform a ${operationAST.operation} operation from a POST request.`,
+            { headers: { Allow: 'POST' } },
+          );
+        }
+      }
+
+      // Perform the execution, reporting any errors creating the context.
+      try {
+        result = await executeFn({
+          schema,
+          document: documentAST,
+          rootValue,
+          contextValue: context,
+          variableValues: variables,
+          operationName,
+          fieldResolver,
+          typeResolver,
+        });
+        response.status = 200;
+      } catch (contextError: unknown) {
+        // Return 400: Bad Request if any execution context errors exist.
+        throw httpError(400, 'GraphQL execution context error.', {
+          graphqlErrors: [contextError],
+        });
+      }
+
+      // Collect and apply any metadata extensions if a function was provided.
+      // https://graphql.github.io/graphql-spec/#sec-Response-Format
+      if (extensionsFn) {
+        const extensions = await extensionsFn({
+          document: documentAST,
+          varia
