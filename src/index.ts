@@ -203,4 +203,35 @@ export function graphqlHTTP(options: Options): Middleware {
       const context = optionsData.context ?? ctx;
       const parseFn = optionsData.customParseFn ?? parse;
       const executeFn = optionsData.customExecuteFn ?? execute;
-      const validateFn = optionsData.customValidateFn ?? valid
+      const validateFn = optionsData.customValidateFn ?? validate;
+
+      pretty = optionsData.pretty ?? false;
+
+      formatErrorFn =
+        optionsData.customFormatErrorFn ??
+        optionsData.formatError ??
+        formatErrorFn;
+
+      devAssertIsObject(
+        schema,
+        'GraphQL middleware options must contain a schema.',
+      );
+
+      // GraphQL HTTP only supports GET and POST methods.
+      if (request.method !== 'GET' && request.method !== 'POST') {
+        throw httpError(405, 'GraphQL only supports GET and POST requests.', {
+          headers: { Allow: 'GET, POST' },
+        });
+      }
+
+      // Get GraphQL params from the request and POST body data.
+      const { query, variables, operationName } = params;
+      showGraphiQL = canDisplayGraphiQL(request, params) && graphiql !== false;
+      if (typeof graphiql !== 'boolean') {
+        graphiqlOptions = graphiql;
+      }
+
+      // If there is no query, but GraphiQL will be displayed, do not produce
+      // a result, otherwise return a 400: Bad Request.
+      if (query == null) {
+   
