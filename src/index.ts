@@ -234,4 +234,34 @@ export function graphqlHTTP(options: Options): Middleware {
       // If there is no query, but GraphiQL will be displayed, do not produce
       // a result, otherwise return a 400: Bad Request.
       if (query == null) {
-   
+        if (showGraphiQL) {
+          return respondWithGraphiQL(response, graphiqlOptions);
+        }
+        throw httpError(400, 'Must provide query string.');
+      }
+
+      // Validate Schema
+      const schemaValidationErrors = validateSchema(schema);
+      if (schemaValidationErrors.length > 0) {
+        // Return 500: Internal Server Error if invalid schema.
+        throw httpError(500, 'GraphQL schema validation error.', {
+          graphqlErrors: schemaValidationErrors,
+        });
+      }
+
+      // Parse source to AST, reporting any syntax error.
+      let documentAST: DocumentNode;
+
+      try {
+        documentAST = parseFn(new Source(query, 'GraphQL request'));
+      } catch (syntaxError: unknown) {
+        // Return 400: Bad Request if any syntax errors errors exist.
+        throw httpError(400, 'GraphQL syntax error.', {
+          graphqlErrors: [syntaxError],
+        });
+      }
+
+      // Validate AST, reporting any errors.
+      const validationErrors = validateFn(schema, documentAST, [
+        ...specifiedRules,
+        ...
