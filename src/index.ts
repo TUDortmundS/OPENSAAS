@@ -428,4 +428,35 @@ function respondWithGraphiQL(
   const data: GraphiQLData = {
     query: params?.query,
     variables: params?.variables,
-    operationName: params?.operati
+    operationName: params?.operationName,
+    result,
+  };
+  const payload = renderGraphiQL(data, options);
+
+  response.type = 'text/html';
+  response.body = payload;
+}
+
+/**
+ * Helper function to determine if GraphiQL can be displayed.
+ */
+function canDisplayGraphiQL(request: Request, params: GraphQLParams): boolean {
+  // If `raw` false, GraphiQL mode is not enabled.
+  // Allowed to show GraphiQL if not requested as raw and this request prefers HTML over JSON.
+  return !params.raw && request.accepts(['json', 'html']) === 'html';
+}
+
+function devAssertIsObject(value: unknown, message: string): void {
+  devAssert(value != null && typeof value === 'object', message);
+}
+
+function devAssertIsNonNullable(value: unknown, message: string): void {
+  devAssert(value != null, message);
+}
+
+function devAssert(condition: unknown, message: string): void {
+  const booleanCondition = Boolean(condition);
+  if (!booleanCondition) {
+    throw new TypeError(message);
+  }
+}
