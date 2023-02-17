@@ -116,4 +116,33 @@ export function renderGraphiQL(
   data: GraphiQLData,
   options?: GraphiQLOptions,
 ): string {
-  const queryString = data.quer
+  const queryString = data.query;
+  const variablesString =
+    data.variables != null ? JSON.stringify(data.variables, null, 2) : null;
+  const resultString =
+    data.result != null ? JSON.stringify(data.result, null, 2) : null;
+  const operationName = data.operationName;
+  const defaultQuery = options?.defaultQuery;
+  const headerEditorEnabled = options?.headerEditorEnabled;
+  const shouldPersistHeaders = options?.shouldPersistHeaders;
+  const subscriptionEndpoint = options?.subscriptionEndpoint;
+  const websocketClient = options?.websocketClient ?? 'v0';
+  const editorTheme = getEditorThemeParams(options?.editorTheme);
+
+  let subscriptionScripts = '';
+  if (subscriptionEndpoint != null) {
+    if (websocketClient === 'v1') {
+      subscriptionScripts = `
+      <script>
+        ${loadFileStaticallyFromNPM('graphql-ws/umd/graphql-ws.js')}
+      </script>
+      <script>
+      ${loadFileStaticallyFromNPM(
+        'subscriptions-transport-ws/browser/client.js',
+      )}
+      </script>
+      `;
+    } else {
+      subscriptionScripts = `
+      <script>
+      
