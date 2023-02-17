@@ -43,4 +43,41 @@ export interface GraphiQLOptions {
   /**
    * By passing an object you may change the theme of GraphiQL.
    */
-  editorTheme
+  editorTheme?: EditorThemeParam;
+}
+
+type EditorThemeParam =
+  | {
+      name: string;
+      url: string;
+    }
+  | string;
+
+type EditorTheme = {
+  name: string;
+  link: string;
+};
+
+// Current latest version of codeMirror.
+const CODE_MIRROR_VERSION = '5.53.2';
+
+// Ensures string values are safe to be used within a <script> tag.
+function safeSerialize(data: string | boolean | null | undefined): string {
+  return data != null
+    ? JSON.stringify(data).replace(/\//g, '\\/')
+    : 'undefined';
+}
+
+// Implemented as ts-node transformation, see ../resources/load-statically-from-npm.js
+declare function loadFileStaticallyFromNPM(npmPath: string): string;
+
+function getEditorThemeParams(
+  editorTheme: EditorThemeParam | undefined | null,
+): EditorTheme | undefined {
+  if (editorTheme == null) {
+    return;
+  }
+  if (typeof editorTheme === 'string') {
+    return {
+      name: editorTheme,
+      link: `<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/${CODE_MIRROR_VERSION}/theme/${editorTheme}.css" 
