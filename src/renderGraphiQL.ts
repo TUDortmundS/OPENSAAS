@@ -80,4 +80,40 @@ function getEditorThemeParams(
   if (typeof editorTheme === 'string') {
     return {
       name: editorTheme,
-      link: `<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/${CODE_MIRROR_VERSION}/theme/${editorTheme}.css" 
+      link: `<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/${CODE_MIRROR_VERSION}/theme/${editorTheme}.css" rel="stylesheet" />`,
+    };
+  }
+  if (
+    typeof editorTheme === 'object' &&
+    editorTheme.name &&
+    typeof editorTheme.name === 'string' &&
+    editorTheme.url &&
+    typeof editorTheme.url === 'string'
+  ) {
+    return {
+      link: `<link href="${editorTheme.url}" rel="stylesheet" />`,
+      name: editorTheme.name,
+    };
+  }
+  throw Error(
+    'invalid parameter "editorTheme": should be undefined/null, string or ' +
+      `{name: string, url: string} but provided is "${
+        typeof editorTheme === 'object'
+          ? JSON.stringify(editorTheme)
+          : editorTheme
+      }"`,
+  );
+}
+
+/**
+ * When express-graphql receives a request which does not Accept JSON, but does
+ * Accept HTML, it may present GraphiQL, the in-browser GraphQL explorer IDE.
+ *
+ * When shown, it will be pre-populated with the result of having executed the
+ * requested query.
+ */
+export function renderGraphiQL(
+  data: GraphiQLData,
+  options?: GraphiQLOptions,
+): string {
+  const queryString = data.quer
