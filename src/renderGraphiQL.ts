@@ -316,4 +316,19 @@ add "&raw" to the end of the URL within a browser.
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,
         editorTheme: ${safeSerialize(
-          editorTheme ? editorTheme.name : undefine
+          editorTheme ? editorTheme.name : undefined,
+        )},
+        query: ${safeSerialize(queryString)},
+        response: ${safeSerialize(resultString)},
+        variables: ${safeSerialize(variablesString)},
+        operationName: ${safeSerialize(operationName)},
+        defaultQuery: ${safeSerialize(defaultQuery)},
+        headerEditorEnabled: ${safeSerialize(headerEditorEnabled)},
+        shouldPersistHeaders: ${safeSerialize(shouldPersistHeaders)}
+      }),
+      document.getElementById('graphiql')
+    );
+  </script>
+</body>
+</html>`;
+}
