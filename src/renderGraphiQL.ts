@@ -251,4 +251,33 @@ add "&raw" to the end of the URL within a browser.
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams, opts) {
       return fetch(fetchURL, {
-        method: 
+        method: 'post',
+        headers: Object.assign(
+          {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          opts && opts.headers,
+        ),
+        body: JSON.stringify(graphQLParams),
+        credentials: 'include',
+      }).then(function (response) {
+        return response.json();
+      });
+    }
+
+    function makeFetcher() {
+      if('${typeof subscriptionEndpoint}' == 'string') {
+        let client = null;
+        let url = window.location.href;
+        if('${typeof websocketClient}' == 'string' && '${websocketClient}' === 'v1') {
+          client = window.graphqlWs.createClient({url: ${safeSerialize(
+            subscriptionEndpoint,
+          )} });
+          return window.GraphiQL.createFetcher({url, wsClient: client});
+        } else {
+          let clientClass = window.SubscriptionsTransportWs.SubscriptionClient;
+          client = new clientClass(${safeSerialize(subscriptionEndpoint)}, {
+            reconnect: true
+          });
+          return window.GraphiQL.createFetcher({url, le
