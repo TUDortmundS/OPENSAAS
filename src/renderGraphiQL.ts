@@ -280,4 +280,40 @@ add "&raw" to the end of the URL within a browser.
           client = new clientClass(${safeSerialize(subscriptionEndpoint)}, {
             reconnect: true
           });
-          return window.GraphiQL.createFetcher({url, le
+          return window.GraphiQL.createFetcher({url, legacyClient: client});
+        }
+      } else {
+        return graphQLFetcher;
+      }
+    }
+
+    // When the query and variables string is edited, update the URL bar so
+    // that it can be easily shared.
+    function onEditQuery(newQuery) {
+      parameters.query = newQuery;
+      updateURL();
+    }
+
+    function onEditVariables(newVariables) {
+      parameters.variables = newVariables;
+      updateURL();
+    }
+
+    function onEditOperationName(newOperationName) {
+      parameters.operationName = newOperationName;
+      updateURL();
+    }
+
+    function updateURL() {
+      history.replaceState(null, null, locationQuery(parameters));
+    }
+
+    // Render <GraphiQL /> into the body.
+    ReactDOM.render(
+      React.createElement(GraphiQL, {
+        fetcher: makeFetcher(),
+        onEditQuery: onEditQuery,
+        onEditVariables: onEditVariables,
+        onEditOperationName: onEditOperationName,
+        editorTheme: ${safeSerialize(
+          editorTheme ? editorTheme.name : undefine
