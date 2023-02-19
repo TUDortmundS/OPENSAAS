@@ -188,4 +188,37 @@ add "&raw" to the end of the URL within a browser.
     }
   </style>
   <style>
-    /* grap
+    /* graphiql/graphiql.css */
+    ${loadFileStaticallyFromNPM('graphiql/graphiql.css')}
+  </style>
+  ${editorTheme ? editorTheme.link : ''}
+  <script>
+    // promise-polyfill/dist/polyfill.min.js
+    ${loadFileStaticallyFromNPM('promise-polyfill/dist/polyfill.min.js')}
+  </script>
+  <script>
+    // unfetch/dist/unfetch.umd.js
+    ${loadFileStaticallyFromNPM('unfetch/dist/unfetch.umd.js')}
+  </script>
+  <script>
+    // react/umd/react.production.min.js
+    ${loadFileStaticallyFromNPM('react/umd/react.production.min.js')}
+  </script>
+  <script>
+    // react-dom/umd/react-dom.production.min.js
+    ${loadFileStaticallyFromNPM('react-dom/umd/react-dom.production.min.js')}
+  </script>
+  <script>
+    // graphiql/graphiql.min.js
+    ${loadFileStaticallyFromNPM('graphiql/graphiql.min.js')}
+  </script>
+  ${subscriptionScripts}
+</head>
+<body>
+  <div id="graphiql">Loading...</div>
+  <script>
+    // Collect the URL parameters
+    var parameters = {};
+    window.location.search.substr(1).split('&').forEach(function (entry) {
+      var eq = entry.indexOf('=');
+      if (eq
