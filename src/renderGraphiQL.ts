@@ -221,4 +221,34 @@ add "&raw" to the end of the URL within a browser.
     var parameters = {};
     window.location.search.substr(1).split('&').forEach(function (entry) {
       var eq = entry.indexOf('=');
-      if (eq
+      if (eq >= 0) {
+        parameters[decodeURIComponent(entry.slice(0, eq))] =
+          decodeURIComponent(entry.slice(eq + 1));
+      }
+    });
+    // Produce a Location query string from a parameter object.
+    function locationQuery(params) {
+      return '?' + Object.keys(params).filter(function (key) {
+        return Boolean(params[key]);
+      }).map(function (key) {
+        return encodeURIComponent(key) + '=' +
+          encodeURIComponent(params[key]);
+      }).join('&');
+    }
+    // Derive a fetch URL from the current URL, sans the GraphQL parameters.
+    var graphqlParamNames = {
+      query: true,
+      variables: true,
+      operationName: true
+    };
+    var otherParams = {};
+    for (var k in parameters) {
+      if (parameters.hasOwnProperty(k) && graphqlParamNames[k] !== true) {
+        otherParams[k] = parameters[k];
+      }
+    }
+    var fetchURL = locationQuery(otherParams);
+    // Defines a GraphQL fetcher using the fetch API.
+    function graphQLFetcher(graphQLParams, opts) {
+      return fetch(fetchURL, {
+        method: 
